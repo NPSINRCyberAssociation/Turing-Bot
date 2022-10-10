@@ -5,7 +5,7 @@ import discord
 
 def format_embed(title, description, image=None):
     embed = discord.Embed(
-        title=title, description=description, timestamp=datetime.datetime.utcnow()
+        title=title, description=description, timestamp=datetime.datetime.now(datetime.timezone.utc)
     )
 
     embed.set_author(
