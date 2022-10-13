@@ -68,36 +68,51 @@ class Question(commands.Cog):
                      os.walk('bot/data/questions/hard') for name in files],
         }
 
-        path = random.choice([question for question in questions_list[difficulty] if question not in data[category.name]])
-        name = '-'.join(path.split('/')[-1].split('.')[0].split(' ')).lower()
+        path = random.choice(
+            [question for question in questions_list[difficulty] if question not in data[category.name]])
+        name = '-'.join(path.split('\\')[-1].split('.')[0].split(' ')).lower()
+
+        # Add the current question to data file.
+        data[category.name].append(name)
+
+        with open('bot/data/questions/data.json', 'w') as data_file:
+            json.dump(data, data_file)
+            data_file.close()
 
         # Create a channel in that category with the same name as the question.
-        await ctx.guild.create_text_channel(f"{name}", category=category)
-        channel = discord.utils.get(ctx.guild.channels, name=name)
+        # await ctx.guild.create_text_channel(f"{name}", category=category)
+        # channel = discord.utils.get(ctx.guild.channels, name=name)
 
         # Create and add question muted role to the user.
         await ctx.guild.create_role(name=f"{category.name} {name}")
 
-        role = discord.utils.get(ctx.guild.roles, name=f"{name}")
+        role = discord.utils.get(ctx.guild.roles, name=f"{category.name} {name}")
 
         await ctx.channel.set_permissions(role, read_messages=True, send_messages=False)
-
         await ctx.user.add_roles(role)
 
-        # Send the info message to the user.
         title = "Question: Success!"
-        description = f"Created a question. Check {channel.mention} to access the " \
-                      f"question!\n" \
-                      "Your question timeout of 15 minutes has begin. You can get another question only if you solve " \
-                      "the current one, or the time of 15 minutes runs out."
-
+        description = "Created a question! Your question timeout of 15 minutes has begin. You can ask for another " \
+                      "question only if you solve the current question or the timeout of 15 minutes runs out. "
+        file = discord.File(path)
         embed = format_embed(title, description)
 
-        await ctx.respond(embed=embed)
+        await ctx.respond(embed=embed, file=file)
+
+        # Send the info message to the user.
+        # title = "Question: Success!"
+        # description = f"Created a question. Check {channel.mention} to access the " \
+        #               f"question!\n" \
+        #               "Your question timeout of 15 minutes has begin. You can get another question only if you solve " \
+        #               "the current one, or the time of 15 minutes runs out."
+        #
+        # embed = format_embed(title, description)
+        #
+        # await ctx.respond(embed=embed)
 
         # Send the question to the new channel.
-        file = discord.File(path)
-        await channel.send(file=file)
+        # file = discord.File(path)
+        # await channel.send(file=file)
 
         logger.info(
             f"{ctx.guild.name} -> Provided a/an {difficulty} question!"
@@ -112,21 +127,10 @@ class Question(commands.Cog):
 
             embed = format_embed(title, description)
 
-            await channel.send(embed=embed)
-
+            await ctx.send(embed=embed)
             await ctx.user.remove_roles(role)
 
-            # Add the question to data file.
-            data[category.name].append(name)
-
-            with open('bot/data/questions/data.json', 'w') as data_file:
-                json.dump(data, data_file)
-                data_file.close()
-
         except commands.RoleNotFound:
-            pass
-
-        except commands.ChannelNotFound:
             pass
 
 
