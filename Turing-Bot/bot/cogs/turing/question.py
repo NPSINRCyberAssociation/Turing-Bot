@@ -91,13 +91,15 @@ class Question(commands.Cog):
         await ctx.channel.set_permissions(role, read_messages=True, send_messages=False)
         await ctx.user.add_roles(role)
 
-        title = "Question: Success!"
-        description = "Created a question! Your question timeout of 15 minutes has begin. You can ask for another " \
-                      "question only if you solve the current question or the timeout of 15 minutes runs out. "
-        file = discord.File(path)
-        embed = format_embed(title, description)
+        # title = "Question: Success!"
+        # description = "Created a question! Your question timeout of 15 minutes has begin. You can ask for another " \
+        #               "question only if you solve the current question or the timeout of 15 minutes runs out. "
+        # embed = format_embed(title, description)
+        #
+        # await ctx.respond(embed=embed, file=file)
 
-        await ctx.respond(embed=embed, file=file)
+        file = discord.File(path)
+        await ctx.respond(file=file)
 
         # Send the info message to the user.
         # title = "Question: Success!"

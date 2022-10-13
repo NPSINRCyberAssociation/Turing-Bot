@@ -13,11 +13,11 @@ class Submit(commands.Cog):
 
     @commands.slash_command(name='submit', description="Submit your answer for the current problem.")
     async def _submit(self,
-                ctx,
-                answer: discord.Option(
-                    str,
-                    description="Your answer for the current problem"
-                )):
+                      ctx,
+                      answer: discord.Option(
+                          str,
+                          description="Your answer for the current problem"
+                      )):
         await ctx.defer()
 
         # Do not allow invoking of command outside the submit channel.
@@ -59,21 +59,45 @@ class Submit(commands.Cog):
         description = f"Team: {category.name}\nQuestion: {current_question}\nAnswer: {answer}"
         embed = format_embed(title, description)
 
+        # Create a modal for custom message.
+        modal = discord.ui.Modal(title="Enter custom message to send to the team.")
+        modal.add_item(discord.ui.InputText(label="Custom message"))
+
+        async def modal_callback(interaction):
+            await interaction.response.send_message("Sent custom message!")
+            await ctx.send(modal.children[0].value)
+
+        modal.callback = modal_callback
+
         # Create a view with correct and incorrect buttons.
         view = discord.ui.View()
+
+        # Add correct button.
         correct = discord.ui.Button(label="Correct", style=discord.ButtonStyle.green)
 
         async def correct_button_callback(interaction):
-            await interaction.response.send_message("Sent reply!")
-            await ctx.send("Your answer was right!")
+            for child in view.children:
+                child.disabled = True
+
+            # await ctx.send("✅")
+            await interaction.response.send_modal(modal)
+            await interaction.response.edit_message(view=view)
+
+            role = discord.utils.get(ctx.guild.roles, name=f"{category.name} {current_question}")
+            await ctx.user.remove_roles(role)
 
         correct.callback = correct_button_callback
 
+        # Add incorrect button.
         incorrect = discord.ui.Button(label="Incorrect", style=discord.ButtonStyle.danger)
 
         async def incorrect_button_callback(interaction):
-            await interaction.response.send_message("Sent reply!")
-            await ctx.send("Your answer was incorrect!")
+            for child in view.children:
+                child.disabled = True
+
+            # await ctx.send("❌")
+            await interaction.response.send_modal(modal)
+            await interaction.response.edit_message(view=view)
 
         incorrect.callback = incorrect_button_callback
 
@@ -81,6 +105,13 @@ class Submit(commands.Cog):
         view.add_item(incorrect)
 
         await submissions_channel.send(embed=embed, view=view)
+
+        # Send the "Sent!" message to the player.
+        title = "Submit: Sent!"
+        description = f"Your answer for {current_question} has been sent to a scorer!" \
+                      " It will be evaluated and scored shortly."
+        embed = format_embed(title, description)
+        await ctx.respond(embed=embed)
 
 
 def setup(bot):
