@@ -76,7 +76,7 @@ class Question(commands.Cog):
         channel = discord.utils.get(ctx.guild.channels, name=name)
 
         # Create and add question muted role to the user.
-        await ctx.guild.create_role(name=f"{name}")
+        await ctx.guild.create_role(name=f"{category.name} {name}")
 
         role = discord.utils.get(ctx.guild.roles, name=f"{name}")
 
